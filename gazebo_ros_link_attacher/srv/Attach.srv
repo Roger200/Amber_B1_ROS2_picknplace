@@ -1,0 +1,8 @@
+# Service to attach or detach two links in Gazebo
+string model_name_1       # Name of the first model
+string link_name_1        # Name of the link in the first model
+string model_name_2       # Name of the second model
+string link_name_2        # Name of the link in the second model
+---
+bool success              # True if the operation was successful, false otherwise
+string message            # Optional message

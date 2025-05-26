@@ -1,0 +1,101 @@
+<sdf version='1.7'>
+  <world name='default'>
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <light name='sun' type='directional'>
+      <cast_shadows>true</cast_shadows>
+      <pose>0 0 10 0 0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <model name='small_cube'>
+      <pose>0.5 0.0 0.025 0 0 0</pose>
+      <link name='link'>
+        <inertial>
+          <mass>0.1</mass>
+          <inertia>
+            <ixx>0.0001</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.0001</iyy>
+            <iyz>0</iyz>
+            <izz>0.0001</izz>
+          </inertia>
+        </inertial>
+        <collision name='collision'>
+          <geometry>
+            <box>
+              <size>0.05 0.05 0.05</size>
+            </box>
+          </geometry>
+        </collision>
+        <visual name='visual'>
+          <geometry>
+            <box>
+              <size>0.05 0.05 0.05</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>1 0 0 1</ambient>
+            <diffuse>1 0 0 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
+            <emissive>0 0 0 0</emissive>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+    <model name='amber_robot'>
+      <include>
+        <uri>../../amber_b1_description</uri> <!-- Path relative to GAZEBO_MODEL_PATH -->
+      </include>
+      <pose>0 0 0 0 0 0</pose>
+    </model>
+
+    <model name='realsense_camera'>
+      <include>
+        <uri>../../realsense_d435_description</uri> <!-- Path relative to GAZEBO_MODEL_PATH -->
+      </include>
+      <!-- The pose of the camera model itself will be set by the joint -->
+      <!-- The plugin is associated with the sensor in the SDF, but configured here -->
+      <plugin name='camera_plugin_world' filename='libgazebo_ros_camera.so'>
+        <ros>
+          <namespace>/camera</namespace>
+          <argument>--ros-args -r image_raw:=color/image_raw -r depth/image_raw:=depth/image_rect_raw -r camera_info:=color/camera_info -r depth/camera_info:=depth/camera_info -r points:=depth/color/points</argument>
+        </ros>
+        <!-- This <camera_name> should match the <camera name='...'> in the SDF's sensor block if you want to override its params. -->
+        <!-- However, the plugin applies to the *sensor*, not the camera tag directly. -->
+        <!-- So we specify the sensor name from the SDF that this plugin should attach to. -->
+        <camera_name>realsense_d435_camera_sensor_sdf</camera_name> <!-- This is critical: it's the <camera name="..."> inside the <sensor> tag in the SDF -->
+        <frame_name>camera_depth_optical_frame</frame_name> <!-- TF frame for the depth data -->
+        <hack_baseline>0.0</hack_baseline>
+        <min_depth>0.1</min_depth>
+        <max_depth>10.0</max_depth>
+        <point_cloud_cutoff>0.1</point_cloud_cutoff>
+        <point_cloud_cutoff_max>10.0</point_cloud_cutoff_max>
+      </plugin>
+    </model>
+
+    <joint name='camera_eef_joint' type='fixed'>
+      <parent>amber_robot::link_eef</parent>
+      <child>realsense_camera::camera_link</child>
+      <pose>0.05 0 0.05 0 -1.5708 0</pose> <!-- Position and orientation of camera_link relative to link_eef -->
+    </joint>
+
+    <!-- Gazebo Link Attacher Plugin -->
+    <plugin name="gazebo_ros_link_attacher" filename="libgazebo_ros_link_attacher.so">
+        <!-- Optional: Add any specific SDF parameters for the plugin here if needed -->
+    </plugin>
+
+  </world>
+</sdf>
